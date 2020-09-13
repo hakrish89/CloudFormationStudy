@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Cfn Parameters AWS types and String types"
+
+Parameters:
+  MyKeyName:
+    Description: KeyPair selection for DevEC2Instance
+    Type: "AWS::EC2::KeyPair::KeyName"
+
+  MyAvailabilityZone:
+    Description: AZ selection
+    Type: String
+    Default: us-east-2a
+    AllowedValues:
+      - us-east-2a
+      - us-east-2b
+      - us-east-2c
+
+  MyInstanceType:
+    Description: Pick Instance type from Parameter store
+    Type: AWS::SSM::Parameter::Value<String>
+
+Resources:
+  DevEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-04fcd96153cb57194
+      InstanceType: !Ref MyInstanceType
+      SecurityGroups:
+        - default
+        - !Ref SSHSecurityGroup
+      KeyName: !Ref MyKeyName
+      AvailabilityZone: !Ref MyAvailabilityZone
+
+  SSHSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: Cfn-SG
+      GroupDescription: My new SSH SG
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0
