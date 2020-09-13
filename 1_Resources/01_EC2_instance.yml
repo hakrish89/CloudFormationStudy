@@ -1,0 +1,12 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "New EC2 instance"
+
+Resources:
+  DevEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-04fcd96153cb57194
+      InstanceType: t2.micro
+      SecurityGroups:
+        - default
+      KeyName: cfn-key-1
