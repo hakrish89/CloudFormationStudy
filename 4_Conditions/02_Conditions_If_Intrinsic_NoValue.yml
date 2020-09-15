@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Testing If and No Value condition
+
+
+Parameters:
+  Environment:
+    Description: Selecting Environment
+    Type: String
+    AllowedValues:
+      - Dev
+      - Prod
+  MyKeyName:
+    Description: Selecting Key Name
+    Type: AWS::EC2::KeyPair::KeyName
+
+Mappings:
+  MyRegionInstanceMap:
+    us-east-2:
+      AMI: ami-04fcd96153cb57194
+    us-east-1:
+      AMI: ami-00514a528eadbc95b
+
+  MyEnvironmentMap:
+    Dev:
+      InstanceType: t2.micro
+    Prod:
+      InstanceType: t2.micro
+
+Conditions:
+  CreateEIPForProd: !Equals [!Ref Environment,Prod]
+  CreateSGForProd: !Equals [!Ref Environment,Prod]
+
+
+Resources:
+  EnvEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !FindInMap [MyRegionInstanceMap,!Ref 'AWS::Region',AMI]
+      InstanceType: !FindInMap [MyEnvironmentMap,!Ref Environment,InstanceType]
+      KeyName: !Ref MyKeyName
+      SecurityGroups: !If [CreateSGForProd, [!Ref MySecurityGroup], !Ref 'AWS::NoValue']
+
+  MyProdEIP:
+    Description: Elastic IP only meant for Prod
+    Type: AWS::EC2::EIP
+    Condition: CreateEIPForProd
+    Properties:
+      InstanceId: !Ref EnvEC2Instance
+
+  MySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Condition: CreateSGForProd
+    Properties:
+      GroupName: ProdSG
+      GroupDescription: SG for Prod
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0
